@@ -1,94 +1,49 @@
---Question 1: Which cities and countries have the highest level of transaction revenues on the site?**
+--Question 1 Calculate the total number of sales for each product 
 
---SQL Queries:
-SELECT city, country, MAX(transactionrevenue) AS highest_transactionrevenue
+--SQL query 
+SELECT CAST(units_sold AS INTEGER) AS units_soldint 
+FROM analytics
+ALTER TABLE analytics
+ADD COLUMN units_soldint INTEGER;
+UPDATE analytics 
+SET units_soldint = CAST(units_sold AS INTEGER);
+--above i had to convert a data type that i mistakenly imported earlier in this assignement
+
+SELECT all_sessions.productsku, SUM(analytics.units_soldint) AS total_sales 
 FROM all_sessions
-WHERE transactionrevenue IS NOT NULL
-GROUP BY city, country, transactionrevenue 
-ORDER BY transactionrevenue DESC
-LIMIT 5;
+JOIN analytics ON all_sessions.fullvisitorid = analytics.fullvisitorid
+WHERE units_soldint IS NOT null 
+GROUP BY productsku; 
+--Answer 
+'"9180754"	2
+"9180793"	26
+"9180833"	5
+"9181573"	181
+"9182575"	1
+"9182581"	6300
+"9182658"	4'
 
 
---Answer:
---Highest transaction revenue is from Sunnyvale UnitedStates w 200000000 in transaction revenue.
+--Question 2
+-- WHat is the average time spend on the website per visitor that falls under organic search?
+--SQL Query 
+SELECT DISTINCT fullvisitorid, avg(timeonsite) AS avg_timeonsite, channelgrouping
+FROM analytics 
+WHERE channelgrouping = 'Organic Search'
+GROUP BY fullvisitorid, channelgrouping, timeonsite 
+HAVING timeonsite IS NOT null 
 
 
+--Question 3 
+--How many units were sold in total on July 16th 2017?
+--SQL Query
+SELECT COUNT (*) units_sold, date 
+FROM analytics 
+WHERE date = '2017-07-16'
+GROUP BY date 
 
---Question 2: What is the average number of products ordered from visitors in each city and country?**
-
---SQL Queries:
-
-SELECT a.city,a.country, AVG(orderedquantity) AS avg_productsordered
-FROM all_sessions a
-JOIN products p ON a.productsku = p.sku 
-GROUP BY a.city, a.country
-ORDER BY avg_productsordered DESC;
---Answer:
-
---Average number of products ordered from visitors in Council Bluffs USA is 7589 products 
-
-
-
---Question 3: Is there any pattern in the types (product categories) of products ordered
---from visitors in each city and country?**
-
---SQL Queries:
-SELECT city, country, v2productcategory
-FROM all_sessions
-WHERE country <> '(not set)' AND city <> '(not set)'
-GROUP BY city, country, v2productcategory 
-ORDER BY country, v2productcategory 
-
---Answer:
-
-  --The most prevalent product category in each city and country is Home products 
-
-
-
---Question 4: What is the top-selling product from each city/country? Can we find any pattern worthy of noting in the products sold?**
-
-
---SQL Queries:
-SELECT (s.total_ordered) AS max_total_ordered, 
-a.city, 
-a.country,
-s.productsku AS top_selling_product 
-FROM all_sessions AS a 
-JOIN sales_report AS s
-ON a.productsku = s.productsku
-GROUP BY s.total_ordered,
-a.city,
-a.country,
-s.productsku
-HAVING 
-	MAX(s.total_ordered)= (
-		SELECT MAX(total_ordered)
-		FROM sales_report AS s 
-		WHERE s.productsku = s.productsku)
-ORDER BY country, city DESC ;
-
-
---Answer:
---GGOEGOAQ012899 
---this is the top selling product in"Croatia""Germany""India""Japan""Malaysia""Mexico""Netherlands""South Korea""SpainSwitzerland""Taiwan""United States"--
-
-
-
-
---Question 5: Can we summarize the impact of revenue generated from each city/country?**
--- what is the highest revenue generated from each city and country 
---SQL Queries:
-ALTER TABLE all_sessions
-ALTER COLUMN totaltransactionrevenue TYPE bigint 
-USING totaltransactionrevenue::bigint;
-
-SELECT totaltransactionrevenue, city, country 
-FROM all_sessions 
-WHERE totaltransactionrevenue IS NOT NULL
-GROUP BY country, city, totaltransactionrevenue
-ORDER BY totaltransactionrevenue DESC
-
-
+--Answer 
+38517 units were sold on july 16 2017 
 
 --Answer:
 --USA had the most revenue impact as it made the most 
